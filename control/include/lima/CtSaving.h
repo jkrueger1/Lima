@@ -470,7 +470,7 @@ namespace lima {
 		       bool keep_in_map);
       void _getTaskList(TaskType type, long frame_nr, const HeaderMap& header, 
 			TaskList& task_list);
-      void _postTaskList(Data&, const TaskList&);
+      void _postTaskList(Data&, const TaskList&, int priority);
       void _compressionFinished(Data&, Stream&);
       void _saveFinished(Data&, Stream&);
       void _setSavingError(CtControl::ErrorCode);

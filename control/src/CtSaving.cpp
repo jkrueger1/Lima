@@ -64,7 +64,8 @@
 using namespace lima;
 
 static const char DIR_SEPARATOR = '/';
-
+static const int COMPRESSION_PRIORITY = 0;
+static const int SAVING_PRIORITY = 1;
 /** @brief save task class
  */
 class CtSaving::Stream::_SaveTask : public SinkTaskBase
@@ -1210,7 +1211,8 @@ void CtSaving::_validateFrameHeader(long frame_nr,
     m_frame_datas.erase(frame_iter);
    }
   aLock.unlock();
-  _postTaskList(aData, task_list);
+  _postTaskList(aData, task_list,
+		m_need_compression ? COMPRESSION_PRIORITY : SAVING_PRIORITY);
 }
 void CtSaving::_resetReadyFlag()
 {
@@ -1391,7 +1393,8 @@ void CtSaving::frameReady(Data &aData)
   _getTaskList(task_type, frame_nr, task_header, task_list);
 
   aLock.unlock();
-  _postTaskList(aData, task_list);
+  _postTaskList(aData, task_list,
+		m_need_compression ? COMPRESSION_PRIORITY: SAVING_PRIORITY);
 }
 /** @brief get write statistic
     this is the last write time
@@ -1588,12 +1591,13 @@ void CtSaving::_synchronousSaving(Data &anImage2Save,HeaderMap &header)
     stream.writeFile(anImage2Save, header);
   }
 }
-void CtSaving::_postTaskList(Data& aData, const TaskList& task_list)
+void CtSaving::_postTaskList(Data& aData,
+			     const TaskList& task_list,int priority)
 {
   DEB_MEMBER_FUNCT();
   DEB_PARAM() << DEB_VAR2(aData, task_list.size());
 
-  TaskMgr *aSavingMgrPt = new TaskMgr();
+  TaskMgr *aSavingMgrPt = new TaskMgr(priority);
   aSavingMgrPt->setEventCallback(m_saving_error_handler);
 
   TaskList::const_iterator it, end = task_list.end();
@@ -1636,7 +1640,7 @@ void CtSaving::_compressionFinished(Data& aData, Stream& stream)
   _getTaskList(Save, frame_nr, header, task_list);
 
   aLock.unlock();
-  _postTaskList(aData, task_list);
+  _postTaskList(aData, task_list,SAVING_PRIORITY);
 }
 
 void CtSaving::_saveFinished(Data &aData, Stream& stream)
@@ -1687,7 +1691,7 @@ void CtSaving::_saveFinished(Data &aData, Stream& stream)
       _getTaskList(Save, nextDataIter->first, task_header, task_list);
       m_frame_datas.erase(nextDataIter);
       aLock.unlock();
-      _postTaskList(aNewData, task_list);
+      _postTaskList(aNewData, task_list, SAVING_PRIORITY);
       break;
     }
 }
