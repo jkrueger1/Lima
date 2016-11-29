@@ -2001,7 +2001,7 @@ void CtSaving::SaveContainer::prepare(CtControl& ct)
   if(m_nb_frames_to_write && 	// if not live
      pars.savingMode != CtSaving::Manual)
     {
-      long nextNumber = pars.nextNumber;
+      long nextNumber = pars.nextNumber - 1;
       for(long i = 0;i < nb_frames;++i)
 	{
 	  FrameParameters frame_par(pars);
@@ -2011,9 +2011,9 @@ void CtSaving::SaveContainer::prepare(CtControl& ct)
 	  else
 	    {
 	      bool new_file = !(i % pars.framesPerFile);
+	      if(new_file) ++nextNumber;
 	      frame_par.m_pars.nextNumber = nextNumber;
 	      frame_par.m_threadable = new_file;
-	      if(new_file) ++nextNumber;
 	    }  
 	  std::pair<Frame2Params::iterator,bool> result = 
 	    m_frame_params.insert(Frame2Params::value_type(i,frame_par));
