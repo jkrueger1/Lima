@@ -1913,8 +1913,7 @@ void CtSaving::SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
     }
 
   lock.lock();
-  if(m_written_frames < (frameId + 1))
-    m_written_frames = frameId + 1;
+  ++m_written_frames;
   
   m_frame_params.erase(frameId);
   --m_running_writing_task;
@@ -1924,7 +1923,7 @@ void CtSaving::SaveContainer::writeFile(Data &aData,HeaderMap &aHeader)
      m_written_frames == m_nb_frames_to_write) // Close file at the end of acquisition
     {
     try {
-      close(&pars);
+      close(&pars,m_written_frames == m_nb_frames_to_write);
     } catch (...) {
       m_stream.setSavingError(CtControl::SaveCloseError);
       THROW_CTL_ERROR(Error) << "Save file close error";
@@ -2200,7 +2199,8 @@ CtSaving::SaveContainer::open(FrameParameters &fpars)
   return Params2Handler::value_type(CtSaving::Parameters(),Handler());
 }
 
-void CtSaving::SaveContainer::close(const CtSaving::Parameters* params)
+void CtSaving::SaveContainer::close(const CtSaving::Parameters* params,
+				    bool force_close)
 {
   DEB_MEMBER_FUNCT();
 
@@ -2218,7 +2218,7 @@ void CtSaving::SaveContainer::close(const CtSaving::Parameters* params)
   else
     {
       Params2Handler::iterator handler = m_params_handler.find(*params);
-      if(!--handler->second.m_nb_frames)
+      if(force_close || !--handler->second.m_nb_frames)
 	{
 	  void* raw_handler = handler->second.m_handler;
 	  const Parameters frame_pars = handler->first;

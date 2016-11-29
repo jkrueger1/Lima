@@ -254,7 +254,8 @@ namespace lima {
       virtual ~SaveContainer();
       
       Params2Handler::value_type open(FrameParameters&);
-      void close(const CtSaving::Parameters* = NULL);	// if NULL mean all
+      void close(const CtSaving::Parameters* = NULL,	// if NULL mean all
+		 bool force_close = false);
       void writeFile(Data&,CtSaving::HeaderMap &);
       void setStatisticSize(int aSize);
       int  getStatisticSize() const;
